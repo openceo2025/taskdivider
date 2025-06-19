@@ -15,6 +15,7 @@ from agents import (
     mark_task_done,
     delete_task,
     get_today_tasks,
+    get_child_tasks,
 )
 
 # テスト実行時はデフォルトの db.sqlite ではなく test_db.sqlite を利用する
@@ -246,6 +247,38 @@ class TestScheduleAgent(unittest.TestCase):
         # 本日のタスクのみ取得されるはず
         self.assertEqual(len(result_list), 1)
         self.assertEqual(result_list[0]["title"], "今日のタスク")
+
+    # --- get_child_tasks ---
+    def test_get_child_tasks(self):
+        """get_child_tasks: 複数の子タスクを持つ親タスクに対して、成功・失敗パターンを確認"""
+        # 親タスクと子タスクを2つ作成
+        parent_result = add_task("親タスク")
+        parent_id = json.loads(parent_result)["new_task_id"]
+        json.loads(add_task("子タスク1", parent=parent_id))
+        json.loads(add_task("子タスク2", parent=parent_id))
+
+        # 親タスクIDから子タスクを取得
+        result = get_child_tasks(parent_id)
+        self.assertIsInstance(result, str)
+        try:
+            child_list = json.loads(result)
+        except Exception as e:
+            self.fail(f"get_child_tasks() の返り値が JSON としてパースできない: {e}")
+        self.assertEqual(len(child_list), 2)
+        titles = [c["title"] for c in child_list]
+        self.assertIn("子タスク1", titles)
+        self.assertIn("子タスク2", titles)
+
+        # 親タスク名（部分一致）から子タスクを取得
+        result_by_title = get_child_tasks("親タ")
+        child_list2 = json.loads(result_by_title)
+        self.assertEqual(len(child_list2), 2)
+
+        # 存在しないIDを指定した場合はエラー
+        result_error = get_child_tasks("nonexistent")
+        self.assertIsInstance(result_error, str)
+        error_obj = json.loads(result_error)
+        self.assertIn("error", error_obj)
 
 if __name__ == "__main__":
     unittest.main()
