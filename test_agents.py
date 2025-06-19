@@ -101,6 +101,13 @@ class TestScheduleAgent(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertEqual(row["title"], "テストタスク")
 
+    def test_add_task_invalid_date(self):
+        """add_task: 不正な日付を渡した場合、エラーJSONが返されることを確認"""
+        result = add_task(title="bad", deadline="2025-13-40")
+        self.assertIsInstance(result, str)
+        obj = json.loads(result)
+        self.assertIn("error", obj)
+
     # --- edit_task ---
     def test_edit_task(self):
         """edit_task: 明示的な引数入力の場合、返り値が文字列型の JSON 文字列になっており、更新が反映されることを確認"""
@@ -145,6 +152,15 @@ class TestScheduleAgent(unittest.TestCase):
         conn.close()
         self.assertEqual(row["title"], "編集後タスク")
         self.assertEqual(row["memo"], "編集済み")
+
+    def test_edit_task_invalid_date(self):
+        """edit_task: 不正な日付を渡した場合、エラーJSONが返されることを確認"""
+        add_result = add_task(title="edit base")
+        task_id = json.loads(add_result)["new_task_id"]
+        result = edit_task(task_id, deadline="invalid")
+        self.assertIsInstance(result, str)
+        obj = json.loads(result)
+        self.assertIn("error", obj)
 
     # --- mark_task_done ---
     def test_mark_task_done(self):
