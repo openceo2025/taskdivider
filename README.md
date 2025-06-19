@@ -6,9 +6,9 @@ TaskDivider は、Flask と swarm を利用した簡易的な予定管理ツー�
 ## 動作環境
 - Python 3.10 以上
 - 主要依存パッケージ
-  - Flask
-  - swarm
-  - pytest (テスト用)
+  - Flask>=3.1.1
+  - swarm>=0.0.2
+  - pytest>=8.4 (テスト用)
 
 ## 仮想環境の作成例
 ```bash
