@@ -106,9 +106,9 @@ def normalize_date_string(date_str: str, **kwags) -> str:
     try:
         dt = datetime.strptime(date_str, "%Y-%m-%d")
         return dt.strftime("%Y-%m-%d")
-    except Exception:
-        logging.debug("ゼロパディング時に何らかのerrorが発生した%s", date_str)
-        return "ゼロパディング時に何らかのerrorが発生した" + date_str
+    except Exception as e:
+        logging.debug("DEBUG: normalize_date_string failed for %s: %s", date_str, e)
+        raise ValueError(f"Invalid date format: {date_str}") from e
     
 # ----------------------------
 # タスク一覧を取得（未完了タスクを昇順に）
@@ -205,9 +205,15 @@ def add_task(title: str, deadline: str = "", estimate: int = 0, memo: str = "",
     try:
         # 日付情報のゼロパディング補正をヘルパー関数で適用
         if deadline.strip():
-            deadline = normalize_date_string(deadline)
+            try:
+                deadline = normalize_date_string(deadline)
+            except ValueError as e:
+                return json.dumps({"error": str(e)})
         if start.strip():
-            start = normalize_date_string(start)
+            try:
+                start = normalize_date_string(start)
+            except ValueError as e:
+                return json.dumps({"error": str(e)})
     
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         task_id = str(uuid.uuid4())
@@ -293,7 +299,10 @@ def edit_task(task_id: str, title: str = None, deadline: str = None, estimate: i
         if deadline is not None:
             # ゼロパディング補正を適用
             if deadline.strip():
-                deadline = normalize_date_string(deadline)
+                try:
+                    deadline = normalize_date_string(deadline)
+                except ValueError as e:
+                    return json.dumps({"error": str(e)})
             update_fields["deadline"] = deadline
         if estimate is not None:
             update_fields["estimate"] = estimate
@@ -303,7 +312,10 @@ def edit_task(task_id: str, title: str = None, deadline: str = None, estimate: i
             update_fields["cost"] = cost
         if start is not None:
             if start.strip():
-                start = normalize_date_string(start)
+                try:
+                    start = normalize_date_string(start)
+                except ValueError as e:
+                    return json.dumps({"error": str(e)})
             update_fields["start"] = start
         if parent is not None:
             update_fields["parent"] = parent
