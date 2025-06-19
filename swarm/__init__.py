@@ -6,3 +6,7 @@ class Agent:
         self.instructions = instructions
         self.temperature = temperature
         self.functions = []
+
+from .repl import run_demo_loop, Swarm
+
+__all__ = ["Agent", "run_demo_loop", "Swarm"]
