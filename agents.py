@@ -56,6 +56,7 @@ schedule_agent = Agent(
     #model = "google_gemma-3-12b-it",
     # model = "deepseek-r1-distill-qwen-7b",
     model = "qwen3-8b-q4_k_m_qwen",
+    #model = "devstralq4_k_m",
     tool_choice="auto",
     instructions=instructions(context_variables),
     temperature=0.2,   # ツール選択の確実性を高めるため低温度に固定
