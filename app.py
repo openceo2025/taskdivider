@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, Response, jsonify, g
 import os
 import json
 import sqlite3
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -21,24 +24,24 @@ def init_db():
         # 初期化前のテーブル一覧を取得
         cur = db.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables_before = [row["name"] for row in cur.fetchall()]
-        print("DEBUG: init_db 開始前のテーブル一覧:", tables_before)
+        logging.debug("DEBUG: init_db 開始前のテーブル一覧: %s", tables_before)
         
         schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
         try:
             with open(schema_path, 'r', encoding='utf-8') as f:
                 schema_sql = f.read()
-                print("DEBUG: schema.sql の内容:\n", schema_sql)
+                logging.debug("DEBUG: schema.sql の内容:\n%s", schema_sql)
                 db.executescript(schema_sql)
         except Exception as e:
-            print("DEBUG: schema.sql の読み込み・実行で例外発生:", e)
+            logging.debug("DEBUG: schema.sql の読み込み・実行で例外発生: %s", e)
         
         db.commit()
         
         # 初期化後のテーブル一覧を取得
         cur = db.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables_after = [row["name"] for row in cur.fetchall()]
-        print("DEBUG: init_db 完了後のテーブル一覧:", tables_after)
-        print("DB初期化完了")
+        logging.debug("DEBUG: init_db 完了後のテーブル一覧: %s", tables_after)
+        logging.info("DB初期化完了")
 
 @app.before_request
 def ensure_db_initialized():

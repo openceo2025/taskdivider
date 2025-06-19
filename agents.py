@@ -6,6 +6,9 @@ import os
 import json
 import uuid
 from typing import List
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # ----------------------------
 # コンテキスト変数（必要に応じて拡張可能）
@@ -84,11 +87,11 @@ def get_db_connection(**kwags):
         cur = conn.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cur.fetchall()
-        print("DEBUG: DBファイル:", context_variables["db_file"])
-        print("DEBUG: DB内のテーブル一覧:", [row["name"] for row in tables])
+        logging.debug("DEBUG: DBファイル: %s", context_variables["db_file"])
+        logging.debug("DEBUG: DB内のテーブル一覧: %s", [row["name"] for row in tables])
         return conn
     except sqlite3.Error as e:
-        print(f"DEBUG: Error in get_db_connection: {str(e)}")
+        logging.debug("DEBUG: Error in get_db_connection: %s", str(e))
         raise
 
 # ----------------------------
@@ -104,8 +107,8 @@ def normalize_date_string(date_str: str, **kwags) -> str:
         dt = datetime.strptime(date_str, "%Y-%m-%d")
         return dt.strftime("%Y-%m-%d")
     except Exception:
-        print("ゼロパティング時に何らかのerrorが発生した" + date_str)
-        return "ゼロパティング時に何らかのerrorが発生した" + date_str
+        logging.debug("ゼロパディング時に何らかのerrorが発生した%s", date_str)
+        return "ゼロパディング時に何らかのerrorが発生した" + date_str
     
 # ----------------------------
 # タスク一覧を取得（未完了タスクを昇順に）
@@ -125,12 +128,12 @@ def list_tasks(**kwags):
         例: "[]"（タスクがない場合）
     """
     try:
-        print("DEBUG: list_tasks start")
+        logging.debug("DEBUG: list_tasks start")
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT sql FROM sqlite_master WHERE name='tasks';")
         table_schema = cur.fetchone()
-        print("DEBUG: tasks テーブルの定義:", table_schema["sql"] if table_schema else "tasksテーブルなし")
+        logging.debug("DEBUG: tasks テーブルの定義: %s", table_schema["sql"] if table_schema else "tasksテーブルなし")
         cur.execute("SELECT * FROM tasks WHERE done = 0 ORDER BY deadline ASC")
         rows = cur.fetchall()
         conn.close()
@@ -250,7 +253,7 @@ def add_task(title: str, deadline: str = "", estimate: int = 0, memo: str = "",
                     conn.commit()
             except sqlite3.Error as e:
                 # 親更新エラーはログに出すが、タスク追加自体は成功しているので無視
-                print(f"DEBUG: Error updating parent's children in add_task: {str(e)}")
+                logging.debug("DEBUG: Error updating parent's children in add_task: %s", str(e))
         conn.close()
         return json.dumps({"new_task_id": task_id})
     except sqlite3.Error as e:
@@ -506,4 +509,4 @@ schedule_agent.functions.extend([
 # デバッグ用：直接実行した場合にタスク一覧を出力
 # ----------------------------
 if __name__ == "__main__":
-    pprint.pprint(list_tasks())
+    logging.info(pprint.pformat(list_tasks()))
